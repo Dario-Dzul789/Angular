@@ -4,20 +4,64 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Configuración de CORS
+const corsOptions = {
+  //origin: process.env.ALLOWED_ORIGIN || '*', // Ej: 'https://tu-frontend.com'
+  origin: process.env.ALLOWED_ORIGIN || 'https://frontendangular-so61.onrender.com', // Ej: 'https://tu-frontend.com'
+  //'http://localhost:3000', // Tu frontend local específico
+  //'http://127.0.0.1:3000', // Alternativa a localhost
+  //'https://tu-dominio-prod.com' // Tu frontend desplegado (opcional)
+  credentials: true, // Si necesitas enviar cookies o headers de autenticación
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //const app2 = express();
 //app2.use(cors());
 //app2.use(express.json());
 
+
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+  database: process.env.DB_DATABASE,
+  port: parseInt(process.env.DB_PORT, 10) || 3306,
+  ssl: {
+    rejectUnauthorized: false // Opcional: requerido si no se usa certificado CA explícito
+  }
 });
 
+//const db = mysql.createConnection(process.env.DATABASE_URL);
+/*
+db.connect((err) => {
+  if (err) {
+    console.error('Error de conexión:', err.message);
+    return;
+  }
+  else
+  {
+    console.log('Conectado a la base de datos:', db.config.database);
+  }
+  
+});
+*/
+db.connect((err) => {
+  if (err) {
+    console.error('Error de conexión:', err.message);
+    return;
+  }
+  else
+  {
+    console.log('Conectado a la base de datos');
+  }
+  
+});
 // LOGIN
 app.get('/usuarios/login/:nombre/:contrasena', (req, res) => {
   const { nombre, contrasena } = req.params
@@ -51,6 +95,7 @@ app.post('/usuarios', (req, res) => {
 });
 
 // CREATE PRODUCTOS
+
 app.post('/productos', (req, res) => {
   const { codigo,nombre, precio,existencia } = req.body;
   db.query('INSERT INTO productos (codigo,nombre, precio,existencia) VALUES (?, ?,?,?)', [codigo, nombre, precio,existencia], (err, result2) => {
@@ -58,12 +103,11 @@ app.post('/productos', (req, res) => {
     db.query('SELECT LAST_INSERT_ID() As id', (err, result) => {
       console.log('ID del registro insertado:', result);
       res.json(result);
-      console.log(result);
+      console.log('SELECT LAST_INSERT_ID() As id');
     });
     //if (err) return res.json(err);
   });
 });
-
 
 // READ USUARIOS
 app.get('/usuarios', (req, res) => {
@@ -277,8 +321,8 @@ app.post('/ventas', (req, res) => {
   //console.log(FechaIngresar.toISOString())
   console.log(parametro);
   //db.query(query, [id_venta, productos, total_venta, fecha_venta], (err, result)=>{
-  //db.query(query, [id_venta, productos, total_venta, ahora], (err, result)=>{
-  db.query(query, [id_venta, productos, total_venta, FechaNuevo], (err, result)=>{
+  db.query(query, [id_venta, productos, total_venta, ahora], (err, result)=>{
+  //db.query(query, [id_venta, productos, total_venta, FechaNuevo], (err, result)=>{
       if(err) {
           console.error(err)
           return res.status(500).send('Error al registrar la venta')
@@ -331,7 +375,8 @@ app.post('/chats', (req, res) => {
 // CHATS
 app.get('/chats/:idemisor/:idreceptor', (req, res) => {
   const { idemisor, idreceptor } = req.params
-  const query = `SELECT * FROM chats WHERE (idemisor = ? AND idreceptor= ?) OR (idreceptor= ? AND idemisor = ?)`
+  //const query = `SELECT * FROM chats WHERE (idemisor = ? AND idreceptor= ?) OR (idreceptor= ? AND idemisor = ?)`
+  const query = `SELECT * FROM chats WHERE (idemisor = ? AND idreceptor= ?) OR (idreceptor= ? AND idemisor = ?) order by id desc`
   db.query(query, [idemisor, idreceptor, idemisor, idreceptor], (err, results) => { 
       if(err) {
           console.error(err)
@@ -344,7 +389,8 @@ app.get('/chats/:idemisor/:idreceptor', (req, res) => {
 // CHATS CON NOMBRES
 app.get('/chats/nombres/:idemisor/:idreceptor', (req, res) => {
   const { idemisor, idreceptor } = req.params
-  const query = `SELECT c.id AS id,u.id AS ide,us.id AS idr, u.nombre AS emisor ,c.mensaje AS mensaje, us.nombre as receptor FROM chats c INNER JOIN usuarios u ON u.id=c.idemisor INNER JOIN usuarios us ON us.id=c.idreceptor WHERE (c.idemisor = ? AND c.idreceptor= ?) OR (c.idreceptor= ? AND c.idemisor = ?)`
+  //const query = `SELECT c.id AS id,u.id AS ide,us.id AS idr, u.nombre AS emisor ,c.mensaje AS mensaje, us.nombre as receptor FROM chats c INNER JOIN usuarios u ON u.id=c.idemisor INNER JOIN usuarios us ON us.id=c.idreceptor WHERE (c.idemisor = ? AND c.idreceptor= ?) OR (c.idreceptor= ? AND c.idemisor = ?)`
+  const query = `SELECT c.id AS id,u.id AS ide,us.id AS idr, u.nombre AS emisor ,c.mensaje AS mensaje, us.nombre as receptor FROM chats c INNER JOIN usuarios u ON u.id=c.idemisor INNER JOIN usuarios us ON us.id=c.idreceptor WHERE (c.idemisor = ? AND c.idreceptor= ?) OR (c.idreceptor= ? AND c.idemisor = ?) order by c.id desc`
   db.query(query, [idemisor, idreceptor, idemisor, idreceptor], (err, results) => { 
       if(err) {
           console.error(err)
@@ -357,7 +403,6 @@ app.get('/chats/nombres/:idemisor/:idreceptor', (req, res) => {
 app.listen(3000, () => {
   console.log('Servidor corriendo en puerto 3000');
 });
-
 
 
 

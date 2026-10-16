@@ -43,6 +43,7 @@ export class ChatComponent implements OnInit{
     });
     this.getChatsNombres();
     this.resetFormulario();
+    this.getChatsNombres();
   }
   getChats(): void {
     this.chatService.getChats(this.idemisor,this.idreceptor).subscribe(data=>{

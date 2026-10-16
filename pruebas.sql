@@ -15,8 +15,8 @@ CREATE TABLE usuarios (
 );
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(50) NOT NULL,
     nombre VARCHAR(50) NOT NULL,
-    descripcion VARCHAR(50) NOT NULL,
     precio float,
     existencia DOUBLE
 );

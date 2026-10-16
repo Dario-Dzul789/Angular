@@ -111,8 +111,22 @@ export class PVComponent implements OnInit{
     this.calcularTotal();
   }
   Total:number=0;
+  Pago:number=0;
+  Cambio:number=0;
   calcularTotal(){
     this.Total = this.totales.reduce((acumulador, current) => acumulador + current, 0);
+    try{
+      this.Cambio=this.Pago-this.Total;
+    }
+    catch{
+      
+    }
+  }
+  onInputChange(event: Event) {
+    const valor = (event.target as HTMLInputElement).value;
+    const entrada: number = Number(valor);
+    this.Cambio=0;
+    this.Cambio=entrada-this.Total;
   }
   detallesVenta:string="";
   codigoVenta=0;
@@ -126,7 +140,7 @@ export class PVComponent implements OnInit{
     this.venta.productos=this.detallesVenta;
     this.venta.total_venta=this.Total;
     this.venta.fecha_venta=new Date();
-    alert(this.venta.fecha_venta);
+    //alert(this.venta.fecha_venta);
     
     
     //this.venta.fecha_venta=Parseda(new Date(new Date().toUTCString()).toISOString());
@@ -158,7 +172,7 @@ export class PVComponent implements OnInit{
         });
 
       }
-      alert("Se Guardo Correctamente LA Venta Con El Codigo: "+this.codigoVenta);
+      //alert("Se Guardo Correctamente LA Venta Con El Codigo: "+this.codigoVenta);
       //alert("Se Guardo Correctamente LA Venta Con El Codigo: "+data.id_venta);
       this.resetFormulario();
     });
